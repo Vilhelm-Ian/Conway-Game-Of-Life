@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use macroquad::prelude::*;
 use std::fmt;
 
 #[derive(Copy, Clone)]
@@ -20,7 +20,7 @@ struct Cell {
     cordinates: Cordinates,
 }
 fn is_valid_index(x: i32, y: i32, number_of_collumns: i32, number_of_rows: i32) -> bool {
-    if y < 0 || y > number_of_rows {
+    if y < 0 || y >= number_of_rows {
         return false;
     }
     if x < 0 || x > number_of_collumns {
@@ -109,15 +109,18 @@ impl fmt::Display for Game {
     }
 }
 
-fn main() {
-    let rows = 10;
-    let collumns = 10;
-    let mut rng = thread_rng();
+#[macroquad::main("BasicShapes")]
+async fn main() {
+    let rows = 20;
+    let collumns = 20;
     let mut game = vec![];
     for y in 0..rows {
         let mut row = vec![];
         for x in 0..collumns {
-            let value: i32 = rng.gen_range(0..10);
+            let mut value: i32 = 0;
+            if x % 2 == 0 {
+                value = 1;
+            }
             let cordinates = Cordinates { y, x };
             let cell = Cell::new(value, cordinates);
             row.push(cell)
@@ -129,12 +132,59 @@ fn main() {
         let first_iteration = Game(game_copy);
         println!("{first_iteration}");
     }
-    let mut game_copy = copy_game(&game);
-    for y in 0..rows {
-        for x in 0..collumns {
-            game_copy[y][x].update(&game);
+    //let mut game_copy =
+    //for y in 0..rows{
+    //    for x in 0..collumns {
+    //game_copy[y][x].update(&game);
+    //}
+    //}
+    //let result = Game(game_copy);
+    //println!("{result}");
+    loop {
+        clear_background(RED);
+        let mut game_copy = copy_game(&game);
+        for y in 0..rows {
+            for x in 0..collumns {
+                let mut cell = game_copy[y][x];
+                let color = match cell.state {
+                    CellType::Live => GREEN,
+                    _ => WHITE,
+                };
+                draw_rectangle(
+                    (screen_width() / collumns as f32) * cell.cordinates.x as f32,
+                    (screen_height() / rows as f32) * cell.cordinates.y as f32,
+                    screen_width() / collumns as f32,
+                    screen_height() / rows as f32 - 1.0,
+                    color,
+                );
+            }
         }
+        if is_mouse_button_pressed(MouseButton::Right) {
+            let (mut x, mut y) = mouse_position();
+            let square_width = screen_width() / collumns as f32;
+            let square_height = screen_height() / rows as f32;
+            x = x / square_width;
+            y = y / square_height;
+            println!("{:?}", x.ceil());
+            println!("{:?}", y.ceil());
+            game_copy[y as usize][x as usize].state = match game_copy[y as usize][x as usize].state
+            {
+                CellType::Live => CellType::Dead,
+                CellType::Dead => CellType::Live,
+            }
+        }
+        if is_mouse_button_pressed(MouseButton::Left) {
+            for y in 0..collumns {
+                for x in 0..rows {
+                    game_copy[y][x].update(&game)
+                }
+            }
+        }
+        // let result = Game(game_copy);
+        //println!("{result}");
+        //
+        game = game_copy;
+
+        next_frame().await
     }
-    let result = Game(game_copy);
-    println!("{result}")
 }
