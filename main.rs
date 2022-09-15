@@ -23,7 +23,7 @@ fn is_valid_index(x: i32, y: i32, number_of_collumns: i32, number_of_rows: i32) 
     if y < 0 || y >= number_of_rows {
         return false;
     }
-    if x < 0 || x > number_of_collumns {
+    if x < 0 || x >= number_of_collumns {
         return false;
     }
     true
@@ -44,8 +44,8 @@ impl Cell {
 
     fn get_neighbours(&mut self, game: &Vec<Vec<Cell>>) {
         let mut result = 0;
-        for y in (self.cordinates.y as i32) - 1..(self.cordinates.y as i32) + 1 {
-            for x in (self.cordinates.x as i32) - 1..(self.cordinates.x as i32) + 1 {
+        for y in self.cordinates.y as i32 - 1..self.cordinates.y as i32 + 2 {
+            for x in self.cordinates.x as i32 - 1..self.cordinates.x as i32 + 2 {
                 if !is_valid_index(y, x, game.len() as i32, game[0].len() as i32) {
                     continue;
                 };
@@ -57,6 +57,11 @@ impl Cell {
                     CellType::Dead => 0,
                 }
             }
+        }
+
+        match self.state {
+            CellType::Live => println!("{result}"),
+            CellType::Dead => (),
         }
         self.neighbours = result;
     }
@@ -77,6 +82,7 @@ impl Cell {
         }
     }
 }
+
 struct Game(pub Vec<Vec<Cell>>);
 
 fn copy_game(vector: &Vec<Vec<Cell>>) -> Vec<Vec<Cell>> {
@@ -126,7 +132,7 @@ async fn main() {
 
     loop {
         clear_background(RED);
-        let mut game_copy = copy_game(&game);
+        let game_copy = copy_game(&game);
         for y in 0..rows {
             for x in 0..collumns {
                 let mut cell = game_copy[y][x];
@@ -143,32 +149,29 @@ async fn main() {
                 );
             }
         }
+
         if is_mouse_button_pressed(MouseButton::Right) {
             let (mut x, mut y) = mouse_position();
             let square_width = screen_width() / collumns as f32;
             let square_height = screen_height() / rows as f32;
-            x = x / square_width;
-            y = y / square_height;
+            x /= square_width;
+            y /= square_height;
             println!("{:?}", x.ceil());
             println!("{:?}", y.ceil());
-            game_copy[y as usize][x as usize].state = match game_copy[y as usize][x as usize].state
-            {
+            game[y as usize][x as usize].state = match game[y as usize][x as usize].state {
                 CellType::Live => CellType::Dead,
                 CellType::Dead => CellType::Live,
             }
         }
+
         if is_mouse_button_pressed(MouseButton::Left) {
+            let game_copy = copy_game(&game);
             for y in 0..collumns {
                 for x in 0..rows {
-                    game_copy[y][x].update(&game)
+                    game[y][x].update(&game_copy)
                 }
             }
         }
-        // let result = Game(game_copy);
-        //println!("{result}");
-        //
-        game = game_copy;
-
         next_frame().await
     }
 }
