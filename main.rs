@@ -120,6 +120,7 @@ async fn main() {
     let rows = 20;
     let collumns = 20;
     let mut game = vec![];
+    let mut start = false;
     for y in 0..rows {
         let mut row = vec![];
         for x in 0..collumns {
@@ -156,8 +157,6 @@ async fn main() {
             let square_height = screen_height() / rows as f32;
             x /= square_width;
             y /= square_height;
-            println!("{:?}", x.ceil());
-            println!("{:?}", y.ceil());
             game[y as usize][x as usize].state = match game[y as usize][x as usize].state {
                 CellType::Live => CellType::Dead,
                 CellType::Dead => CellType::Live,
@@ -165,6 +164,9 @@ async fn main() {
         }
 
         if is_mouse_button_pressed(MouseButton::Left) {
+            start = !start;
+        }
+        if start {
             let game_copy = copy_game(&game);
             for y in 0..collumns {
                 for x in 0..rows {
