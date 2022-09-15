@@ -117,29 +117,13 @@ async fn main() {
     for y in 0..rows {
         let mut row = vec![];
         for x in 0..collumns {
-            let mut value: i32 = 0;
-            if x % 2 == 0 {
-                value = 1;
-            }
             let cordinates = Cordinates { y, x };
-            let cell = Cell::new(value, cordinates);
+            let cell = Cell::new(0, cordinates);
             row.push(cell)
         }
         game.push(row);
     }
-    {
-        let game_copy = copy_game(&game);
-        let first_iteration = Game(game_copy);
-        println!("{first_iteration}");
-    }
-    //let mut game_copy =
-    //for y in 0..rows{
-    //    for x in 0..collumns {
-    //game_copy[y][x].update(&game);
-    //}
-    //}
-    //let result = Game(game_copy);
-    //println!("{result}");
+
     loop {
         clear_background(RED);
         let mut game_copy = copy_game(&game);
