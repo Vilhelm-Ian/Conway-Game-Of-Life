@@ -1,4 +1,5 @@
 use macroquad::prelude::*;
+use rayon::prelude::*;
 use std::fmt;
 
 #[derive(Copy, Clone)]
@@ -117,8 +118,8 @@ impl fmt::Display for Game {
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
-    let rows = 20;
-    let collumns = 20;
+    let rows = 100;
+    let collumns = 100;
     let mut game = vec![];
     let mut start = false;
     for y in 0..rows {
@@ -136,7 +137,7 @@ async fn main() {
         let game_copy = copy_game(&game);
         for y in 0..rows {
             for x in 0..collumns {
-                let mut cell = game_copy[y][x];
+                let cell = game_copy[y][x];
                 let color = match cell.state {
                     CellType::Live => GREEN,
                     _ => WHITE,
@@ -169,9 +170,9 @@ async fn main() {
         if start {
             let game_copy = copy_game(&game);
             for y in 0..collumns {
-                for x in 0..rows {
-                    game[y][x].update(&game_copy)
-                }
+                game[y]
+                    .par_iter_mut()
+                    .for_each(|cell| cell.update(&game_copy));
             }
         }
         next_frame().await
